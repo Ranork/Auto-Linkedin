@@ -35,9 +35,9 @@ This project provides automation for LinkedIn using Node.js and Puppeteer.
 
 - Sign in and sign out functionalities.
 - Search user profiles with keywords etc.
-- (WIP) Sending and accepting connection requests.
+- Sending connection requests.
+- Visit profiles.
 - (WIP) Sending messages.
-- (WIP) Visit profiles.
 
 ## Contributions
 

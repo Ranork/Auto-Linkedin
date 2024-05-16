@@ -24,7 +24,7 @@ This project provides automation for LinkedIn using Node.js and Puppeteer.
 
 ## Usage
 
-1. Open the `.env` file and configure your LinkedIn account credentials and other necessary settings for automation tasks.
+1. Open the `.env` file and configure your LinkedIn account credentials (username & password) and other necessary settings for automation tasks.
 
 2. Run the application:
    ```bash

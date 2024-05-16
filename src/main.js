@@ -9,11 +9,17 @@ async function main() {
   await client.login(Environment.settings.USERNAME, Environment.settings.PASSWORD)
 
   let profiles = await client.searchPeople({
-    keywords: 'iş zekası',
-    network: ['S']
-  })
+    keywords: 'data analyse',
+    network: ['B']
+  }, 10)
 
   console.log(profiles);
+
+  for (let p of profiles) {
+    await p.connectionRequest(client)
+    
+  }
+
 
 }
 

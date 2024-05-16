@@ -2,13 +2,20 @@ const { default: puppeteer } = require("puppeteer");
 const { Environment } = require("../libraries/environment")
 const querystring = require('querystring');
 const fs = require('fs');
+const Profile = require("./profile");
 
 class LinkedIn {
+
+  /** Linkedin Client
+   * @param {PuppeteerLaunchOptions} browserSettings - Puppeteer browser settings
+   */
   constructor(browserSettings) {
     this.browserSettings = browserSettings
   }
 
-
+  /** Get client's browser
+   * @returns Browser - puppeteer browser
+   */
   async getBrowser() {
     if (this.browser) { return this.browser }
 
@@ -18,7 +25,11 @@ class LinkedIn {
   }
 
 
-
+  /** Logs into LinkedIn asynchronously
+   * @param {string} username - The LinkedIn username (or mail address)
+   * @param {string} password - The LinkedIn password
+   * @returns {Promise<void>} Returns when the login process is completed
+   */
   async login(username, password) {
     
     await Environment.declare_settings()
@@ -31,7 +42,10 @@ class LinkedIn {
       await page.setCookie(...cookies)
       await page.goto(Environment.settings.MAIN_ADDRESS + 'feed')
 
-      if (page.url().includes('feed')) return console.log('Logged in from cache.');
+      if (page.url().includes('feed')) {
+        await page.close()
+        return console.log('Logged in from cache.')
+      }
     }
 
     await page.goto(Environment.settings.MAIN_ADDRESS + 'login')
@@ -84,17 +98,23 @@ class LinkedIn {
 
       const cookies = await page.cookies()
       fs.writeFileSync('./cache/cookies.json', JSON.stringify(cookies))
-
+      await page.close()
       return console.log('Login complated.');
     }
     else {
       await new Promise(r => setTimeout(r, 30000));
-      // throw new Error('Login Failed.')
+      throw new Error('Login Failed.')
     }
   }
 
 
-
+  /** Search people with filters
+   * @param {Object} parameters - Object that includes filters
+   * @param {string} parameters.keywords - The keywords to search for
+   * @param {Array<string>} parameters.network - The network distance (F for 1, S for 2, B for 3+)
+   * @param {number} limit - Profile object limit (default 100)
+   * @returns {Promise<Array<Profile>>} Array of profile objects
+   */
   async searchPeople(parameters, limit = 100) {
     const browser = await this.getBrowser()
     const page = await browser.newPage()
@@ -112,10 +132,15 @@ class LinkedIn {
       findedProfiles.push(...profiles)
     }
 
-    return findedProfiles
+    await page.close()
+    return findedProfiles.map(p => (new Profile(p)))
 
   }
 
+  /** Extract Profiles from Search People Page
+   * @param {Object} page - the puppeteer page that opened in search/results/people url
+   * @returns {Promise<Array>} Array of profile objects
+   */
   async extractProfilesFromSearch(page) {
     return await page.evaluate(() => {
       const cards = document.querySelectorAll('.linked-area')

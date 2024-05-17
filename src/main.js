@@ -5,19 +5,20 @@ async function main() {
   await Environment.declare_settings()
 
   //! Headless unabled for debug
-  const client = new LinkedIn({ headless: false })
+  const client = new LinkedIn({ headless: true })
   await client.login(Environment.settings.USERNAME, Environment.settings.PASSWORD)
 
   let profiles = await client.searchPeople({
-    keywords: 'data analyse',
-    network: ['B']
-  }, 10)
+    keywords: 'venture capital',
+    network: ['S']
+  }, 300)
 
-  console.log(profiles);
-
+  let i = 1
   for (let p of profiles) {
-    await p.connectionRequest(client)
+    console.log('  ' + i + '/' + profiles.length);
+    i++
     
+    await p.visitProfile(client, 50)
   }
 
 

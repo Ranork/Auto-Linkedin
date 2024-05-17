@@ -20,7 +20,7 @@ class LinkedIn {
     if (this.browser) { return this.browser }
 
     this.browser = await puppeteer.launch(this.browserSettings)
-    console.log('New Browser created.')
+    console.log('  New Browser created.')
     return this.browser
   }
 
@@ -31,6 +31,7 @@ class LinkedIn {
    * @returns {Promise<void>} Returns when the login process is completed
    */
   async login(username, password) {
+    console.log('[TASK] Login');
     
     await Environment.declare_settings()
 
@@ -44,7 +45,7 @@ class LinkedIn {
 
       if (page.url().includes('feed')) {
         await page.close()
-        return console.log('Logged in from cache.')
+        return console.log('  Logged in from cache.')
       }
     }
 
@@ -61,14 +62,14 @@ class LinkedIn {
     await page.waitForNavigation()
     let afterLoginUrl = page.url()
 
-    console.log('Url: ' + afterLoginUrl);
+    console.log('  Url: ' + afterLoginUrl);
   
     //* Checkpoint for login
     if (afterLoginUrl.includes('checkpoint/challenge')) {
   
       for (let i = 0; i < Environment.settings.TIMEOUT; i++) {
         if (page.url() !== afterLoginUrl) {
-          console.log('New URL: ' + page.url());
+          console.log('  New URL: ' + page.url());
   
           if (page.url().includes('feed')) {
             await page.waitForNavigation()
@@ -78,14 +79,14 @@ class LinkedIn {
 
         try {
           const header = await page.evaluate(() => {
-            console.log(document.querySelector('h1'));
+            console.log('  ' + document.querySelector('h1'));
             return document.querySelector('h1').textContent;
           });
           const explanation = await page.evaluate(() => {
             return document.querySelector('h1').parentElement.querySelector('p').textContent;
           });
       
-          console.log(header + ' -> ' + explanation);
+          console.log('  ' + header + ' -> ' + explanation);
         }
         catch (e) { console.log(e.message) }
   
@@ -99,7 +100,7 @@ class LinkedIn {
       const cookies = await page.cookies()
       fs.writeFileSync('./cache/cookies.json', JSON.stringify(cookies))
       await page.close()
-      return console.log('Login complated.');
+      return console.log('  Login complated.');
     }
     else {
       await new Promise(r => setTimeout(r, 30000));
@@ -116,21 +117,30 @@ class LinkedIn {
    * @returns {Promise<Array<Profile>>} Array of profile objects
    */
   async searchPeople(parameters, limit = 100) {
+    console.log('[TASK] Search People: ' + limit + ' (' + JSON.stringify(parameters) + ')');
     const browser = await this.getBrowser()
     const page = await browser.newPage()
 
     if (parameters.network) { parameters.network = JSON.stringify(parameters.network)}
 
+    let i = 1
     let findedProfiles = []
     for (let p = 1; p <= limit / 10; p++) {
+
       parameters.page = p
       const qString = querystring.stringify(parameters)
       
       await page.goto(Environment.settings.MAIN_ADDRESS + 'search/results/people/?' + qString)
-  
+      await page.waitForSelector('.linked-area')
+
       let profiles = await this.extractProfilesFromSearch(page)
       findedProfiles.push(...profiles)
+
+      console.log('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
+      i++
     }
+
+    console.log('  Search complete: ' + findedProfiles.length);
 
     await page.close()
     return findedProfiles.map(p => (new Profile(p)))

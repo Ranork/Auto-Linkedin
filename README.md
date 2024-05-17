@@ -2,10 +2,23 @@
 
 # Auto LinkedIn
 
-This project provides automation for LinkedIn using Node.js and Puppeteer.
+Auto LinkedIn is a project that provides automation for LinkedIn using Node.js and Puppeteer. This project helps you save time by automating various tasks on LinkedIn.
+
+## Features
+
+- Sign in functionalities
+- Search user profiles with keywords, network distance etc.
+- Sending connection requests
+- Visit profiles
+- (Work In Progress) Sending messages
 
 ## Installation
 
+### Prerequisites
+- Make sure you have Node.js and npm installed. [Node.js Installation](https://nodejs.org/)
+- Puppeteer library is used, which requires Chrome browser for automation.
+
+### Installation Steps
 1. Clone the project:
 ```bash
 git clone https://github.com/Ranork/Auto-Linkedin.git
@@ -70,6 +83,7 @@ You can use profile methods or access properties like name, url, title etc.
 for (let p of profiles) {
    await p.connectionRequest(client, 'Hi! Please accept my request')
 }
+
 //-- Console
 // [TASK] Conection request: Test User - test-user
 //   Connection request send to Test User (test-user)
@@ -77,13 +91,10 @@ for (let p of profiles) {
 ```
 
 
-## Features
+## Contact
 
-- Sign in and sign out functionalities.
-- Search user profiles with keywords etc.
-- Sending connection requests.
-- Visit profiles.
-- (WIP) Sending messages.
+For any questions or feedback about the project, please contact us through GitHub.
+
 
 ## Contributions
 

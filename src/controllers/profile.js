@@ -12,13 +12,33 @@ class Profile {
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {number} waitMs - Wait milliseconds after opening profile (default is 500ms)
    */
-  async visitProfile(linkedinClient, waitMs = 500) {
-    console.log('[TASK] Profile Visit: ' + this.details.name + ' (' + this.details.id + ')');
+  async visitProfile(linkedinClient, waitMs = 500, scrollPage = true) {
+    console.log('[TASK] Profile Visit: ' + this.details.name + ' (waitMs: ' + waitMs + ', scrollPage: ' + scrollPage + ')');
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
     await page.waitForSelector('.scaffold-layout__main')
     
+    if (scrollPage) {
+
+      await page.evaluate(async () => {
+        const totalDuration = 5 * 1000;
+        const scrollStep = window.innerHeight / 2;
+        const delay = 100;
+    
+        const startTime = Date.now();
+        const endTime = startTime + totalDuration;
+    
+        while (Date.now() < endTime) {
+          window.scrollBy(0, scrollStep);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+  
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+    }
+
     await new Promise(r => setTimeout(r, waitMs));
     await page.close()
   }
@@ -28,12 +48,14 @@ class Profile {
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {string} connectionMessage - Message that will send with connection request
    */
-  async connectionRequest(linkedinClient, connectionMessage) {
-    console.log('[TASK] Conection request: ' + this.details.name + ' (' + this.details.id + ')');
+  async connectionRequest(linkedinClient, connectionMessage, waitMs = 500) {
+    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs + ')');
     
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
+
+    await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child')
 
     let buttonText = await page.evaluate(async () => {
       await new Promise(r => setTimeout(r, 500));
@@ -73,6 +95,7 @@ class Profile {
       }
       await new Promise(r => setTimeout(r, 500));
   
+      await new Promise(r => setTimeout(r, waitMs));
       await page.close()
       return console.log('  Connection request send to ' + this.details.name + ' (' + this.details.id + ')')
     }
@@ -103,8 +126,8 @@ class Profile {
           await page.focus('.artdeco-modal__actionbar > button:nth-child(2)');
           await page.click('.artdeco-modal__actionbar > button:nth-child(2)');
       }
-      await new Promise(r => setTimeout(r, 500));
-  
+      
+      await new Promise(r => setTimeout(r, waitMs));
       await page.close()
       return console.log('  Connection request send to ' + this.details.name + ' (' + this.details.id + ')')
     }

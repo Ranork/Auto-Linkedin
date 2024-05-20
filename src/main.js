@@ -9,16 +9,18 @@ async function main() {
   await client.login(Environment.settings.USERNAME, Environment.settings.PASSWORD)
 
   let profiles = await client.searchPeople({
-    keywords: 'venture capital',
-    network: ['S']
+    keywords: 'data scientist',
+    network: ['S'],
+    geoUrn: ['90010435'],
   }, 300)
 
   let i = 1
   for (let p of profiles) {
+    let waitms = ((Math.random() * 10) + 1) * 1000
+    
+    await p.visitProfile(client, waitms)
     console.log('  ' + i + '/' + profiles.length);
     i++
-    
-    await p.visitProfile(client, 50)
   }
 
 

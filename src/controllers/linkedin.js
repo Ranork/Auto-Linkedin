@@ -113,6 +113,7 @@ class LinkedIn {
    * @param {Object} parameters - Object that includes filters
    * @param {string} parameters.keywords - The keywords to search for
    * @param {Array<string>} parameters.network - The network distance (F for 1, S for 2, B for 3+)
+   * @param {Array<string>} parameters.geoUrn - Locations
    * @param {number} limit - Profile object limit (default 100)
    * @returns {Promise<Array<Profile>>} Array of profile objects
    */
@@ -122,6 +123,7 @@ class LinkedIn {
     const page = await browser.newPage()
 
     if (parameters.network) { parameters.network = JSON.stringify(parameters.network)}
+    if (parameters.geoUrn) { parameters.geoUrn = JSON.stringify(parameters.geoUrn)}
 
     let i = 1
     let findedProfiles = []
@@ -131,12 +133,14 @@ class LinkedIn {
       const qString = querystring.stringify(parameters)
       
       await page.goto(Environment.settings.MAIN_ADDRESS + 'search/results/people/?' + qString)
-      await page.waitForSelector('.linked-area')
 
-      let profiles = await this.extractProfilesFromSearch(page)
-      findedProfiles.push(...profiles)
+      try { 
+        let profiles = await this.extractProfilesFromSearch(page) 
+        findedProfiles.push(...profiles)
+        console.log('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
+      }
+      catch (e) { console.log(e); }
 
-      console.log('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
       i++
     }
 
@@ -152,6 +156,8 @@ class LinkedIn {
    * @returns {Promise<Array>} Array of profile objects
    */
   async extractProfilesFromSearch(page) {
+    await page.waitForSelector('.linked-area')
+
     return await page.evaluate(() => {
       const cards = document.querySelectorAll('.linked-area')
       

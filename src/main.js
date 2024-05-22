@@ -6,13 +6,13 @@ async function main() {
 
   //! Headless unabled for debug
   const client = new LinkedIn({ headless: true })
-  await client.login(Environment.settings.USERNAME, Environment.settings.PASSWORD)
+  await client.login(Environment.settings.ACCOUNT_USERNAME, Environment.settings.ACCOUNT_PASSWORD)
 
   let profiles = await client.searchPeople({
-    keywords: 'data scientist',
+    keywords: 'Business Intelligence',
     network: ['S'],
     geoUrn: ['90010435'],
-  }, 300)
+  }, 100)
 
   let i = 1
   for (let p of profiles) {
@@ -22,6 +22,8 @@ async function main() {
     console.log('  ' + i + '/' + profiles.length);
     i++
   }
+
+  
 
 
 }

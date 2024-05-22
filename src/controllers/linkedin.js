@@ -43,7 +43,9 @@ class LinkedIn {
       await page.setCookie(...cookies)
       await page.goto(Environment.settings.MAIN_ADDRESS + 'feed')
 
-      if (page.url().includes('feed')) {
+      await new Promise(r => setTimeout(r, 1000));
+
+      if (page.url().endsWith('feed/')) {
         await page.close()
         return console.log('  Logged in from cache.')
       }

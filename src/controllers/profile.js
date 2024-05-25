@@ -1,4 +1,5 @@
 const { Environment } = require("../libraries/environment");
+const { randomNumber } = require("../libraries/misc");
 const { LinkedIn } = require("./linkedin");
 
 
@@ -12,8 +13,10 @@ class Profile {
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {number} waitMs - Wait milliseconds after opening profile (default is 500ms)
    */
-  async visitProfile(linkedinClient, waitMs = 500, scrollPage = true) {
-    console.log('[TASK] Profile Visit: ' + this.details.name + ' (waitMs: ' + waitMs + ', scrollPage: ' + scrollPage + ')');
+  async visitProfile(linkedinClient, waitMs, scrollPage = true) {
+    if (!waitMs) waitMs = randomNumber()
+
+    console.log('[TASK] Profile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ', scrollPage: ' + scrollPage + ')');
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
@@ -48,14 +51,15 @@ class Profile {
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {string} connectionMessage - Message that will send with connection request
    */
-  async connectionRequest(linkedinClient, connectionMessage, waitMs = 500) {
-    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs + ')');
+  async connectionRequest(linkedinClient, connectionMessage, waitMs) {
+    if (!waitMs) waitMs = randomNumber()
+    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ')');
     
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
 
-    await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child')
+    await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > button')
 
     let buttonText = await page.evaluate(async () => {
       await new Promise(r => setTimeout(r, 500));

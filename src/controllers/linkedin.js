@@ -3,6 +3,7 @@ const { Environment } = require("../libraries/environment")
 const querystring = require('querystring');
 const fs = require('fs');
 const Profile = require("./profile");
+const { randomNumber } = require("../libraries/misc");
 
 class LinkedIn {
 
@@ -43,7 +44,7 @@ class LinkedIn {
       await page.setCookie(...cookies)
       await page.goto(Environment.settings.MAIN_ADDRESS + 'feed')
 
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, randomNumber(1,3)));
 
       if (page.url().endsWith('feed/')) {
         await page.close()

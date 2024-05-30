@@ -1,17 +1,44 @@
 const { default: puppeteer } = require("puppeteer");
-const { Environment } = require("../libraries/environment")
 const querystring = require('querystring');
 const fs = require('fs');
-const Profile = require("./profile");
+const LinkedinProfile = require("./profile");
 const { randomNumber } = require("../libraries/misc");
 
 class LinkedIn {
 
   /** Linkedin Client
    * @param {PuppeteerLaunchOptions} browserSettings - Puppeteer browser settings
+   * 
+   * @param {Object} linkedinSettings - Settings for linkedin static variables
+   * 
+   * @param {string} linkedinSettings.MAIN_ADDRESS - Main linkedin address (default: "https://www.linkedin.com/")
+   * @param {string} linkedinSettings.CACHE_DIR - cache files dir (default: "./cache/")
+   * 
+   * @param {string} linkedinSettings.PROFILEBUTTON_MESSAGE - In profile message button's text (default: "Message")
+   * @param {string} linkedinSettings.PROFILEBUTTON_CONNECT - In profile connect button's text (default: "Connect")
+   * @param {string} linkedinSettings.PROFILEBUTTON_FOLLOW - In profile follow button's text (default: "Follow")
+   * 
+   * @param {number} linkedinSettings.COOLDOWN_MIN - Minimum cooldown treshold (default: 5)
+   * @param {number} linkedinSettings.COOLDOWN_MAX - Maximum cooldown treshold (default: 20)
+   * @param {number} linkedinSettings.TIMEOUT - Timeout in seconds (default: 60)
    */
-  constructor(browserSettings) {
+  constructor(browserSettings, linkedinSettings) {
     this.browserSettings = browserSettings
+    this.linkedinSettings = linkedinSettings || {}
+
+    if (!this.linkedinSettings.MAIN_ADDRESS) this.linkedinSettings.MAIN_ADDRESS = process.env.MAIN_ADDRESS || 'https://www.linkedin.com/'
+    if (!this.linkedinSettings.CACHE_DIR) this.linkedinSettings.CACHE_DIR = process.env.CACHE_DIR || './cache/'
+
+    if (!this.linkedinSettings.PROFILEBUTTON_MESSAGE) this.linkedinSettings.PROFILEBUTTON_MESSAGE = process.env.PROFILEBUTTON_MESSAGE || 'Message'
+    if (!this.linkedinSettings.PROFILEBUTTON_CONNECT) this.linkedinSettings.PROFILEBUTTON_CONNECT = process.env.PROFILEBUTTON_CONNECT || 'Connect'
+    if (!this.linkedinSettings.PROFILEBUTTON_FOLLOW) this.linkedinSettings.PROFILEBUTTON_FOLLOW = process.env.PROFILEBUTTON_FOLLOW || 'Follow'
+
+    if (!this.linkedinSettings.COOLDOWN_MIN) this.linkedinSettings.COOLDOWN_MIN = parseInt(process.env.COOLDOWN_MIN) || 5
+    if (!this.linkedinSettings.COOLDOWN_MAX) this.linkedinSettings.COOLDOWN_MAX = parseInt(process.env.COOLDOWN_MAX) || 20
+    if (!this.linkedinSettings.TIMEOUT) this.linkedinSettings.TIMEOUT = parseInt(process.env.TIMEOUT) || 60
+
+    // make dir if not exists
+    if (!fs.existsSync(this.linkedinSettings.CACHE_DIR)) fs.mkdirSync(this.linkedinSettings.CACHE_DIR, { recursive: true });
   }
 
   /** Get client's browser
@@ -33,16 +60,14 @@ class LinkedIn {
    */
   async login(username, password) {
     console.log('[TASK] Login');
-    
-    await Environment.declare_settings()
 
     const browser = await this.getBrowser()
     const page = await browser.newPage()
 
-    if (fs.existsSync('./cache/cookies.json')) {
-      let cookies = JSON.parse(fs.readFileSync('./cache/cookies.json'))
+    if (fs.existsSync(this.linkedinSettings.CACHE_DIR + 'cookies.json')) {
+      let cookies = JSON.parse(fs.readFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json'))
       await page.setCookie(...cookies)
-      await page.goto(Environment.settings.MAIN_ADDRESS + 'feed')
+      await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed')
 
       await new Promise(r => setTimeout(r, randomNumber(1,3)));
 
@@ -52,7 +77,7 @@ class LinkedIn {
       }
     }
 
-    await page.goto(Environment.settings.MAIN_ADDRESS + 'login')
+    await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'login')
   
     const usernameInput = await page.$('#username')
     await usernameInput.type(username)
@@ -70,7 +95,7 @@ class LinkedIn {
     //* Checkpoint for login
     if (afterLoginUrl.includes('checkpoint/challenge')) {
   
-      for (let i = 0; i < Environment.settings.TIMEOUT; i++) {
+      for (let i = 0; i < this.linkedinSettings.TIMEOUT; i++) {
         if (page.url() !== afterLoginUrl) {
           console.log('  New URL: ' + page.url());
   
@@ -101,7 +126,7 @@ class LinkedIn {
     if (page.url().includes('feed')) {
 
       const cookies = await page.cookies()
-      fs.writeFileSync('./cache/cookies.json', JSON.stringify(cookies))
+      fs.writeFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json', JSON.stringify(cookies))
       await page.close()
       return console.log('  Login complated.');
     }
@@ -117,8 +142,8 @@ class LinkedIn {
    * @param {string} parameters.keywords - The keywords to search for
    * @param {Array<string>} parameters.network - The network distance (F for 1, S for 2, B for 3+)
    * @param {Array<string>} parameters.geoUrn - Locations
-   * @param {number} limit - Profile object limit (default 100)
-   * @returns {Promise<Array<Profile>>} Array of profile objects
+   * @param {number} limit - LinkedinProfile object limit (default 100)
+   * @returns {Promise<Array<LinkedinProfile>>} Array of profile objects
    */
   async searchPeople(parameters, limit = 100) {
     console.log('[TASK] Search People: ' + limit + ' (' + JSON.stringify(parameters) + ')');
@@ -129,17 +154,17 @@ class LinkedIn {
     if (parameters.geoUrn) { parameters.geoUrn = JSON.stringify(parameters.geoUrn)}
 
     let i = 1
-    let findedProfiles = []
+    let findedLinkedinProfiles = []
     for (let p = 1; p <= limit / 10; p++) {
 
       parameters.page = p
       const qString = querystring.stringify(parameters)
       
-      await page.goto(Environment.settings.MAIN_ADDRESS + 'search/results/people/?' + qString)
+      await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'search/results/people/?' + qString)
 
       try { 
-        let profiles = await this.extractProfilesFromSearch(page) 
-        findedProfiles.push(...profiles)
+        let profiles = await this.extractLinkedinProfilesFromSearch(page) 
+        findedLinkedinProfiles.push(...profiles)
         console.log('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
       }
       catch (e) { console.log(e); }
@@ -147,18 +172,18 @@ class LinkedIn {
       i++
     }
 
-    console.log('  Search complete: ' + findedProfiles.length);
+    console.log('  Search complete: ' + findedLinkedinProfiles.length);
 
     await page.close()
-    return findedProfiles.map(p => (new Profile(p)))
+    return findedLinkedinProfiles.map(p => (new LinkedinProfile(p)))
 
   }
 
-  /** Extract Profiles from Search People Page
+  /** Extract LinkedinProfiles from Search People Page
    * @param {Object} page - the puppeteer page that opened in search/results/people url
    * @returns {Promise<Array>} Array of profile objects
    */
-  async extractProfilesFromSearch(page) {
+  async extractLinkedinProfilesFromSearch(page) {
     await page.waitForSelector('.linked-area')
 
     return await page.evaluate(() => {
@@ -186,4 +211,4 @@ class LinkedIn {
 }
 
 
-module.exports = { LinkedIn }
+module.exports = LinkedIn

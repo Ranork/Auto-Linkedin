@@ -1,9 +1,8 @@
-const { Environment } = require("../libraries/environment");
 const { randomNumber } = require("../libraries/misc");
-const { LinkedIn } = require("./linkedin");
+const LinkedIn = require("./linkedin");
 
 
-class Profile {
+class LinkedinProfile {
   constructor(details) { 
     this.details = details
   }
@@ -11,15 +10,16 @@ class Profile {
 
   /** Visit the user's rofile page
    * @param {LinkedIn} linkedinClient - Client that will used in visit
-   * @param {number} waitMs - Wait milliseconds after opening profile (default is 500ms)
+   * @param {number} waitMs - Wait milliseconds after opening profile (default is coming from linkedin client)
+   * @param {boolean} scrollPage - Scroll page to bottom to be sure (default: true)
    */
   async visitProfile(linkedinClient, waitMs, scrollPage = true) {
-    if (!waitMs) waitMs = randomNumber()
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN, linkedinClient.linkedinSettings.COOLDOWN_MAX)
 
-    console.log('[TASK] Profile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ', scrollPage: ' + scrollPage + ')');
+    console.log('[TASK] LinkedinProfile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ', scrollPage: ' + scrollPage + ')');
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
-    await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
+    await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
     await page.waitForSelector('.scaffold-layout__main')
     
     if (scrollPage) {
@@ -52,12 +52,12 @@ class Profile {
    * @param {string} connectionMessage - Message that will send with connection request
    */
   async connectionRequest(linkedinClient, connectionMessage, waitMs) {
-    if (!waitMs) waitMs = randomNumber()
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN, linkedinClient.linkedinSettings.COOLDOWN_MAX)
     console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ')');
     
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
-    await page.goto(Environment.settings.MAIN_ADDRESS + 'in/' + this.details.id)
+    await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
 
     await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > button')
 
@@ -71,13 +71,13 @@ class Profile {
       return parentDiv.querySelector('button').textContent.trim()
     })
 
-    const firstButtonisMessage = (buttonText === Environment.settings.PROFILEBUTTON_MESSAGE)
+    const firstButtonisMessage = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_MESSAGE)
     if (firstButtonisMessage) {
       await page.close()
       return console.log('  Already connected to ' + this.details.name + ' (' + this.details.id + ')')
     }
 
-    const firstButtonisConnect = (buttonText === Environment.settings.PROFILEBUTTON_CONNECT)
+    const firstButtonisConnect = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_CONNECT)
     if (firstButtonisConnect) {
       let connectButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > button'
       await page.waitForSelector(connectButtonQuery);
@@ -104,7 +104,7 @@ class Profile {
       return console.log('  Connection request send to ' + this.details.name + ' (' + this.details.id + ')')
     }
 
-    const firstButtonisFollow = (buttonText === Environment.settings.PROFILEBUTTON_FOLLOW)
+    const firstButtonisFollow = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_FOLLOW)
     if (firstButtonisFollow) {
       let moreButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > div:last-child > button'
       await page.waitForSelector(moreButtonQuery)
@@ -139,4 +139,4 @@ class Profile {
   }
 }
 
-module.exports = Profile
+module.exports = LinkedinProfile

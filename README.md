@@ -19,37 +19,28 @@ Auto LinkedIn is a project that provides automation for LinkedIn using Node.js a
 - Puppeteer library is used, which requires Chrome browser for automation.
 
 ### Installation Steps
-1. Clone the project:
+1. Create a new directory
 ```bash
-git clone https://github.com/Ranork/Auto-Linkedin.git
+mkdir linkedinAutomationProject
+cd linkedinAutomationProject
 ```
 
-2. Navigate to the project directory:
+2. Install NPM
 ```bash
-cd Auto-Linkedin
-mkdir cache
+npm init -y
 ```
 
-3. Install the dependencies:
+3. Install package:
 ```bash
-npm install
-```
-
-## Usage
-
-1. Open the `.env` file and configure your LinkedIn account credentials (username & password) and other necessary settings for automation tasks.
-
-2. Run the application:
-```bash
-npm run start
+npm install auto-linkedin
 ```
 
 
-### Example Usage
+### Usage
 
 1. Create a linkedin client and login:
 ```js
-const client = new LinkedIn({ headless: true })
+const client = new LinkedIn()
 await client.login(process.env.USERNAME, process.env.PASSWORD)
 
 //-- Console
@@ -57,6 +48,7 @@ await client.login(process.env.USERNAME, process.env.PASSWORD)
 //   New Browser created.
 //   Login completed.
 ```
+Follow the console even though there is an extra instruction.
 
 2. Search for users with keyword and 2. network distance (200 limit):
 ```js
@@ -65,7 +57,7 @@ const profiles = await client.searchPeople({
    network: ['S']
 }, 200)
 
-// profiles = [Profile, Profile, ...]
+// profiles = [LinkedinProfile, LinkedinProfile, ...]
 
 //-- Console
 // [TASK] Search People: 200 ({"keywords":"venture capital","network":["S"]})
@@ -93,7 +85,7 @@ for (let p of profiles) {
 
 ## Contact
 
-For any questions or feedback about the project, please contact us through GitHub.
+For any questions or feedback about the project, please contact us through GitHub or emir@akatron.net
 
 
 ## Contributions

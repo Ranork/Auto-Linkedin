@@ -1,9 +1,6 @@
-const { Environment } = require("./environment")
-
-
 function randomNumber(start, end) {
-  if (!start) start = Environment.settings.COOLDOWN_MIN
-  if (!end) end = Environment.settings.COOLDOWN_MAX
+  if (!start) start = 5
+  if (!end) end = 20
   
   return (Math.random() * Math.abs(end - start)) + start
 }

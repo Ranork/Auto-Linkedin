@@ -128,7 +128,7 @@ class LinkedIn {
       const cookies = await page.cookies()
       fs.writeFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json', JSON.stringify(cookies))
       await page.close()
-      return console.log('  Login complated.');
+      return console.log('  Login completed.');
     }
     else {
       await new Promise(r => setTimeout(r, 30000));

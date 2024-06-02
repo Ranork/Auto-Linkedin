@@ -75,6 +75,12 @@ class LinkedIn {
         await page.close()
         return console.log('  Logged in from cache.')
       }
+      else {
+        console.log('  Login from cache failed. Trying to login again.');
+        const client = await page.createCDPSession()		
+        await client.send('Network.clearBrowserCookies')
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
 
     await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'login')
@@ -124,11 +130,12 @@ class LinkedIn {
   
     
     if (page.url().includes('feed')) {
+      console.log('  Login complated.');
 
       const cookies = await page.cookies()
       fs.writeFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json', JSON.stringify(cookies))
       await page.close()
-      return console.log('  Login completed.');
+      return console.log('  Login cached.');
     }
     else {
       await new Promise(r => setTimeout(r, 30000));

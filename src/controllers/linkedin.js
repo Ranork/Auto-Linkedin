@@ -3,9 +3,9 @@ const querystring = require('querystring');
 const fs = require('fs');
 const LinkedinProfile = require("./profile");
 const { randomNumber } = require("../libraries/misc");
+const LinkedinCompany = require("./company");
 
 class LinkedIn {
-
   /** Linkedin Client
    * @param {PuppeteerLaunchOptions} browserSettings - Puppeteer browser settings
    * 
@@ -33,6 +33,8 @@ class LinkedIn {
     if (!this.linkedinSettings.PROFILEBUTTON_CONNECT) this.linkedinSettings.PROFILEBUTTON_CONNECT = process.env.PROFILEBUTTON_CONNECT || 'Connect'
     if (!this.linkedinSettings.PROFILEBUTTON_FOLLOW) this.linkedinSettings.PROFILEBUTTON_FOLLOW = process.env.PROFILEBUTTON_FOLLOW || 'Follow'
 
+    if (!this.linkedinSettings.BUTTON_MORERESULTS) this.linkedinSettings.BUTTON_MORERESULTS = process.env.BUTTON_MORERESULTS || 'Show more results'
+
     if (!this.linkedinSettings.COOLDOWN_MIN) this.linkedinSettings.COOLDOWN_MIN = parseInt(process.env.COOLDOWN_MIN) || 5
     if (!this.linkedinSettings.COOLDOWN_MAX) this.linkedinSettings.COOLDOWN_MAX = parseInt(process.env.COOLDOWN_MAX) || 20
     if (!this.linkedinSettings.TIMEOUT) this.linkedinSettings.TIMEOUT = parseInt(process.env.TIMEOUT) || 60
@@ -52,7 +54,6 @@ class LinkedIn {
     return this.browser
   }
 
-
   /** Logs into LinkedIn asynchronously
    * @param {string} username - The LinkedIn username (or mail address)
    * @param {string} password - The LinkedIn password
@@ -69,7 +70,7 @@ class LinkedIn {
       await page.setCookie(...cookies)
       await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed')
 
-      await new Promise(r => setTimeout(r, randomNumber(1,3)));
+      await new Promise(r => setTimeout(r, randomNumber(1,3) * 1000));
 
       if (page.url().endsWith('feed/')) {
         await page.close()
@@ -143,7 +144,6 @@ class LinkedIn {
     }
   }
 
-
   /** Search people with filters
    * @param {Object} parameters - Object that includes filters
    * @param {string} parameters.keywords - The keywords to search for
@@ -213,6 +213,80 @@ class LinkedIn {
       }
       return people
     })
+  }
+
+  /** Get latest connections
+   * @param {number} limit - How many connections you want? (default: 80)
+   * @returns {Promise<Array<LinkedinProfile>>} Array of profile objects
+   */
+  async getLastConnections(limit = 80) {
+    console.log('[TASK] Get Last Connections: ' + limit);
+
+    const browser = await this.getBrowser()
+    const page = await browser.newPage()
+
+    await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'mynetwork/invite-connect/connections/')
+    await page.waitForSelector('.artdeco-button')
+
+    for (let p = 0; p <= limit / 40; p++) {
+      await page.evaluate((linkedinSettings) => {
+        for (let e of document.querySelectorAll('.artdeco-button')) {
+          if(e.textContent.trim() === linkedinSettings.BUTTON_MORERESULTS) e.click()
+        }
+      }, this.linkedinSettings)
+
+      console.log('  Scroll ' + p);
+      await new Promise(r => setTimeout(r, randomNumber(3,5) * 1000))
+    }
+
+    let people = await page.evaluate(() => {
+      let cards = document.querySelectorAll('.mn-connection-card')
+      let list = []
+      for (let c of cards) {
+          list.push({
+              link: c.querySelector('a').href,
+              id: c.querySelector('a').href.split('/in/')[1].replaceAll('/',''),
+              name: c.querySelector('.mn-connection-card__name').innerText.trim(),
+              title: c.querySelector('.mn-connection-card__occupation').innerText.trim(),
+              location: null,
+              buttonText: c.querySelector('button')?.textContent?.trim() ?? undefined,
+          })
+      }
+      return list
+    })
+
+    await page.close()
+
+    if (people.length > limit) people = people.slice(0, limit)
+    return people.map(p => (new LinkedinProfile(p)))
+
+  }
+
+  /** Get latest connections
+   * @returns {Promise<LinkedinCompany>} Owned linkedin company
+   */
+  async getMyCompany() {
+    console.log('[TASK] Get My Company');
+
+    const browser = await this.getBrowser()
+    const page = await browser.newPage()
+
+    await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed/')
+
+    let company_element = await page.evaluate(() => (document.querySelector('.org-organization-admin-pages-entrypoint-card__card')))
+
+    if (!company_element) {
+      await page.close()
+      throw new Error('No authorized company was found.')
+    }
+
+    let company_link = await page.evaluate(() => (document.querySelector('.org-organization-admin-pages-entrypoint-card__card').querySelector('a').href))
+    let company_id = company_link.split('/company/')[1].replaceAll('/admin/', '')
+
+    await page.close()
+    let company = new LinkedinCompany(company_id)
+    await company.fetchDetails(this)
+    return company
   }
 
 }

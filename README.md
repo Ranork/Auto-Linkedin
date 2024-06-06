@@ -35,8 +35,21 @@ npm init -y
 npm install auto-linkedin
 ```
 
+## Methods and objects
 
-### Usage
+| Class           | Method             | Explanation                      | Example                                                    | Publish Version |
+|-----------------|--------------------|----------------------------------|------------------------------------------------------------|-----------------|
+| Linkedin        | login              | Authentication for linkedin      | Linkedin.login('email', 'password')                        | 1.0.0           |
+| Linkedin        | searchPeople       | Find people from search          | Linkedin.searchPeople({ keywords: 'venture capital'}, 100) | 1.0.0           |
+| Linkedin        | getLastConnections | Find latest connected people     | Linkedin.getLastConnections(120)                           | 1.1.3           |
+| Linkedin        | getMyCompany       | Get owned company                | Linkedin.getMyCompany()                                    | 1.1.3           |
+| LinkedinProfile | visitProfile       | Visit user's profile for a while | LinkedinProfile(Linkedin)                                  | 1.1.0           |
+| LinkedinProfile | connectionRequest  | Send connection request          | LinkedinProfile(Linkedin, 'Please add me!')                | 1.1.0           |
+| LinkedinCompany | fetchDetails       | Fetch details of owned company   | LinkedinCompany.fetchDetails(Linkedin)                     | 1.1.3           |
+| LinkedinCompany | sendInvite         | Send invitation to a user        | LinkedinCompany.sendInvite(Linkedin, 'John Doe')           | 1.1.3           |
+
+
+## Usage
 
 1. Create a linkedin client and login:
 ```js

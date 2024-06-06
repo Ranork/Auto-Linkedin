@@ -3,6 +3,15 @@ const LinkedIn = require("./linkedin");
 
 
 class LinkedinProfile {
+  /** Linkedin User Profile
+   * @param {object} details - Profile details
+   * @param {string} details.id - user id (in the link)
+   * @param {string} details.link - profile link
+   * @param {string} details.name - profile's full name
+   * @param {string} details.title - profile's main title
+   * @param {string} details.location - profile's location
+   * @param {string} details.buttonText - profile's main button (connect, message or follow etc)
+   */
   constructor(details) { 
     this.details = details
   }

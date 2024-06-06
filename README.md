@@ -10,6 +10,7 @@ Auto LinkedIn is a project that provides automation for LinkedIn using Node.js a
 - Search user profiles with keywords, network distance etc.
 - Sending connection requests
 - Visit profiles
+- Company invitations
 - (Work In Progress) Sending messages
 
 ## Installation

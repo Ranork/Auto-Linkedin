@@ -23,9 +23,9 @@ class LinkedinProfile {
    * @param {boolean} scrollPage - Scroll page to bottom to be sure (default: true)
    */
   async visitProfile(linkedinClient, waitMs, scrollPage = true) {
-    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN, linkedinClient.linkedinSettings.COOLDOWN_MAX)
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
 
-    console.log('[TASK] LinkedinProfile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ', scrollPage: ' + scrollPage + ')');
+    console.log('[TASK] LinkedinProfile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ', scrollPage: ' + scrollPage + ')');
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
@@ -61,14 +61,14 @@ class LinkedinProfile {
    * @param {string} connectionMessage - Message that will send with connection request
    */
   async connectionRequest(linkedinClient, connectionMessage, waitMs) {
-    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN, linkedinClient.linkedinSettings.COOLDOWN_MAX)
-    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(2) + ')');
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
+    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
     
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
 
-    await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > button')
+    await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div > div > button')
 
     let buttonText = await page.evaluate(async () => {
       await new Promise(r => setTimeout(r, 500));
@@ -83,7 +83,7 @@ class LinkedinProfile {
     const firstButtonisMessage = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_MESSAGE)
     if (firstButtonisMessage) {
       await page.close()
-      return console.log('  Already connected to ' + this.details.name + ' (' + this.details.id + ')')
+      throw new Error('  Already connected or connection already sent.')
     }
 
     const firstButtonisConnect = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_CONNECT)
@@ -110,18 +110,18 @@ class LinkedinProfile {
   
       await new Promise(r => setTimeout(r, waitMs));
       await page.close()
-      return console.log('  Connection request send to ' + this.details.name + ' (' + this.details.id + ')')
+      return console.log('  Connection request sent.')
     }
 
     const firstButtonisFollow = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_FOLLOW)
     if (firstButtonisFollow) {
-      let moreButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > div:last-child > button'
+      let moreButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div > div > .artdeco-dropdown'
       await page.waitForSelector(moreButtonQuery)
       await page.click(moreButtonQuery)
 
       await new Promise(r => setTimeout(r, 500));
 
-      let connectButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div:last-child > div > div:last-child > div > div > ul > li:nth-child(3) > div'
+      let connectButtonQuery = '.scaffold-layout__main > section > div:nth-child(2) > div > div > div:last-child > div > div > ul > li:nth-child(3) > div'
       await page.waitForSelector(connectButtonQuery);
       await page.click(connectButtonQuery);
   
@@ -142,7 +142,7 @@ class LinkedinProfile {
       
       await new Promise(r => setTimeout(r, waitMs));
       await page.close()
-      return console.log('  Connection request send to ' + this.details.name + ' (' + this.details.id + ')')
+      return console.log('  Connection request sent.')
     }
 
   }

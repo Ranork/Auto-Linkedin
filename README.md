@@ -4,6 +4,8 @@
 
 Auto LinkedIn is a project that provides automation for LinkedIn using Node.js and Puppeteer. This project helps you save time by automating various tasks on LinkedIn.
 
+Check out the the [wiki](https://github.com/Ranork/Auto-Linkedin/wiki/Installation) for details.
+
 ## Features
 
 - Sign in functionalities

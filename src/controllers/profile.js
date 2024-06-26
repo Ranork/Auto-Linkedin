@@ -55,7 +55,6 @@ class LinkedinProfile {
     await page.close()
   }
 
-
   /** Send connection request to user
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {string} connectionMessage - Message that will send with connection request
@@ -146,6 +145,89 @@ class LinkedinProfile {
     }
 
   }
+
+  /** Send message to a profile
+   * @param {LinkedIn} linkedinClient 
+   * @param {string} message 
+   * @param {number} waitMs 
+   */
+  async sendMessage(linkedinClient, message, waitMs) {
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
+    console.log('[TASK] Send message: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
+
+    const browser = await linkedinClient.getBrowser()
+    const page = await browser.newPage()
+    await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
+
+    try { await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button') }
+    catch (e) { throw new Error('Cannot send message to user. Message button not found in profile. (1)')  }
+    
+
+    let buttonText = await page.evaluate(async () => {
+      await new Promise(r => setTimeout(r, 500));
+
+      //* If there is extra div remove it
+      if (document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').classList[0] === 'display-flex') document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').remove()
+
+      let parentDiv = document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child')
+      return parentDiv.querySelector('button').textContent.trim()
+    })
+
+    const firstButtonisMessage = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_MESSAGE)
+    if (!firstButtonisMessage) throw new Error('Cannot send message to user. Message button not found in profile. (2)');
+
+    
+    //todo: Not works.... IDK WHYY
+    await page.click('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button')
+
+
+    await page.waitForSelector('.msg-form__contenteditable')
+    await page.type('.msg-form__contenteditable', message)
+
+
+    await new Promise(r => setTimeout(r, 500));
+
+  }
+
+
+  /** Get profile with url
+   * @param {LinkedIn} linkedinClient - Client that will used in visit
+   * @param {string} url - full profile url or just the id part 
+   * @returns {LinkedinProfile}
+   */
+  static async getProfile(linkedinClient, url) {
+    if (url.includes('/in/')) url = url.split('/in/')[1].replaceAll('/', '')
+    console.log('[TASK] Get profile: ' + url);
+
+    const browser = await linkedinClient.getBrowser()
+    const page = await browser.newPage()
+
+    await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + url)
+    await page.waitForSelector('.scaffold-layout__main')
+
+    let details = await page.evaluate(() => {
+      //* If there is extra div remove it
+      if (document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').classList[0] === 'display-flex') document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').remove()
+
+      let btnparentDiv = document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child')
+
+      return {
+        name: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div > div > span')?.textContent ?? '').trim(),
+        title: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2)')?.textContent ?? '').trim(),
+        location: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > span')?.textContent ?? '').trim(),
+        buttonText: btnparentDiv.querySelector('button').textContent.trim()
+      }
+    })
+
+    details.id = url
+    details.link = page.url()
+
+    await new Promise(r => setTimeout(r, 500));
+    await page.close()
+
+    return new LinkedinProfile(details)
+  }
+
 }
 
 module.exports = LinkedinProfile

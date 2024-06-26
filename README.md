@@ -46,6 +46,7 @@ npm install auto-linkedin
 | Linkedin        | searchPeople       | Find people from search          | 1.0.0           |
 | Linkedin        | getLastConnections | Find latest connected people     | 1.1.3           |
 | Linkedin        | getMyCompany       | Get owned company                | 1.1.3           |
+| LinkedinProfile | getProfile         | Get profile from url or id       | 1.2.0           |
 | LinkedinProfile | visitProfile       | Visit user's profile for a while | 1.1.0           |
 | LinkedinProfile | connectionRequest  | Send connection request          | 1.1.0           |
 | LinkedinCompany | fetchDetails       | Fetch details of owned company   | 1.1.3           |

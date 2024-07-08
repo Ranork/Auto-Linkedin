@@ -6,14 +6,18 @@ Auto LinkedIn is a project that provides automation for LinkedIn using Node.js a
 
 Check out the the [wiki](https://github.com/Ranork/Auto-Linkedin/wiki/Installation) for details.
 
+## Important Note
+Use at your own discretion. Do not spam people with this. We discourage any stalkerware, bulk or automated messaging usage.
+
+
 ## Features
 
 - Sign in functionalities
 - Search user profiles with keywords, network distance etc.
+- Sending messages and getting history
 - Sending connection requests
 - Visit profiles
 - Company invitations
-- (Work In Progress) Sending messages
 
 ## Installation
 
@@ -47,7 +51,8 @@ npm install auto-linkedin
 | Linkedin        | getLastConnections | Find latest connected people     | 1.1.3           |
 | Linkedin        | getMyCompany       | Get owned company                | 1.1.3           |
 | LinkedinProfile | getProfile         | Get profile from url or id       | 1.2.0           |
-| LinkedinProfile | sendMessage        | Send message to a profile        | WIP             |
+| LinkedinProfile | sendMessage        | Send message to a profile        | 1.3.0           |
+| LinkedinProfile | getMessageHistory  | Get history of messages          | 1.3.0           |
 | LinkedinProfile | visitProfile       | Visit user's profile for a while | 1.1.0           |
 | LinkedinProfile | connectionRequest  | Send connection request          | 1.1.0           |
 | LinkedinCompany | fetchDetails       | Fetch details of owned company   | 1.1.3           |

@@ -1,13 +1,18 @@
 {
   "name": "auto-linkedin",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Auto LinkedIn is a project that provides automation for LinkedIn using Node.js and Puppeteer. This project helps you save time by automating various tasks on LinkedIn.",
   "main": "src/main.js",
   "scripts": {
     "start": "node src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["linkedin", "social media", "automation", "puppeteer"],
+  "keywords": [
+    "linkedin",
+    "social media",
+    "automation",
+    "puppeteer"
+  ],
   "author": "Ranork <ranorkk@gmail.com> (https://github.com/Ranork)",
   "license": "GPL-3.0",
   "repository": {
@@ -15,7 +20,6 @@
     "url": "https://github.com/Ranork/Auto-Linkedin"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
     "puppeteer": "^22.8.1"
   }
 }

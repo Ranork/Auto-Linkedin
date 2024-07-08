@@ -157,6 +157,10 @@ class LinkedinProfile {
 
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
+    
+    //! if not change viewport, message button not works.
+    await page.setViewport({ width: 1366, height: 768 })
+
     await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
 
     try { await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button') }
@@ -176,19 +180,80 @@ class LinkedinProfile {
     const firstButtonisMessage = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_MESSAGE)
     if (!firstButtonisMessage) throw new Error('Cannot send message to user. Message button not found in profile. (2)');
 
-    
-    //todo: Not works.... IDK WHYY
-    await page.click('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button')
-
+    await page.tap('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button')
 
     await page.waitForSelector('.msg-form__contenteditable')
     await page.type('.msg-form__contenteditable', message)
 
-
-    await new Promise(r => setTimeout(r, 500));
-
+    await new Promise(r => setTimeout(r, waitMs/2));
+    await page.tap('.msg-form__send-button')
+    await new Promise(r => setTimeout(r, waitMs/2));
   }
 
+  /** Get Message history with this profile
+   * @param {LinkedIn} linkedinClient 
+   * @param {number} waitMs - Wait milliseconds
+   * @returns {Array<Object>}
+   */
+  async getMessageHistory(linkedinClient, waitMs) {
+    if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
+      console.log('[TASK] Message History: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
+  
+      const browser = await linkedinClient.getBrowser()
+      const page = await browser.newPage()
+      
+      //! if not change viewport, message button not works.
+      await page.setViewport({ width: 1366, height: 768 })
+  
+      await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
+  
+      try { await page.waitForSelector('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button') }
+      catch (e) { throw new Error('Cannot send message to user. Message button not found in profile. (1)')  }
+      
+  
+      let buttonText = await page.evaluate(async () => {
+        await new Promise(r => setTimeout(r, 500));
+  
+        //* If there is extra div remove it
+        if (document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').classList[0] === 'display-flex') document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child').remove()
+  
+        let parentDiv = document.querySelector('.scaffold-layout__main > section > div:nth-child(2) > div:last-child')
+        return parentDiv.querySelector('button').textContent.trim()
+      })
+  
+      const firstButtonisMessage = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_MESSAGE)
+      if (!firstButtonisMessage) throw new Error('Cannot send message to user. Message button not found in profile. (2)');
+  
+      await page.tap('.scaffold-layout__main > section > div:nth-child(2) > div > div > div > .artdeco-button')
+
+
+      await new Promise(r => setTimeout(r, waitMs));
+
+      let messages = await page.evaluate(() => {
+        let msgs = []
+        let lastMsgTime, lastMsgName
+        for (let msg of document.querySelectorAll('.msg-s-event-listitem, .msg-s-message-list__time-heading')) {
+          
+          if (msg.tagName.toLowerCase() === 'div') {
+            if (msg.querySelector('time')) lastMsgTime = msg.querySelector('time').innerText.trim().replaceAll(' ','')
+            if (msg.querySelector('a > img')) lastMsgName = msg.querySelector('a > img').title.trim()
+  
+            msgs.push({
+              time: lastMsgTime,
+              name: lastMsgName,
+              message: msg.querySelector('.msg-s-event__content').innerText.trim()
+            })
+          }
+          else if (msg.tagName.toLowerCase() === 'time') {
+            msgs.push(msg.innerText)
+          }
+
+        }
+        return msgs
+      })
+
+      return messages
+  }
 
   /** Get profile with url
    * @param {LinkedIn} linkedinClient - Client that will used in visit

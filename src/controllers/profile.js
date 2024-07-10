@@ -11,6 +11,7 @@ class LinkedinProfile {
    * @param {string} details.title - profile's main title
    * @param {string} details.location - profile's location
    * @param {string} details.buttonText - profile's main button (connect, message or follow etc)
+   * @param {Array<Objecr>} details.experiences - work experiences list
    */
   constructor(details) { 
     this.details = details
@@ -286,6 +287,45 @@ class LinkedinProfile {
 
     details.id = url
     details.link = page.url()
+
+    details.experiences = await page.evaluate(() => {
+      let divs = document.querySelector('#experience')?.parentElement?.querySelectorAll('.artdeco-list__item') ?? []
+      let result = []
+      for (let elm of divs) {
+
+          let company_name, company_url, employment_type, title, period
+
+          company_url =  elm.querySelector('a').href
+          if (company_url.includes('search')) company_url = null
+          
+          //. Multi title/position
+          if (elm.querySelector('div > div:nth-child(2) > div > a > div')) {
+              company_name = elm.querySelector('div > div:nth-child(2) > div > a > div').querySelector('span').innerText
+              title = elm.querySelector('div > div:nth-child(2) > div:nth-child(2)').querySelector('a > div').querySelector('span').innerText
+              if (elm.querySelector('div > div:nth-child(2) > div > a > span > span').innerText.includes('·')) {
+                  employment_type = elm.querySelector('div > div:nth-child(2) > div > a > span > span').innerText.split(' · ')[0]
+                  period = elm.querySelector('div > div:nth-child(2) > div > a > span > span').innerText.split(' · ')[1]
+              }
+              else {
+                  period = elm.querySelector('div > div:nth-child(2) > div > a > span > span').innerText
+              }
+          }
+
+          //. Single title/position
+          else {
+              company_name = elm.querySelector('div > div:nth-child(2) > div > div > span > span').innerText.split(' · ')[0]
+              employment_type = elm.querySelector('div > div:nth-child(2) > div > div > span > span').innerText.split(' · ')[1]
+              title = elm.querySelector('div > div:nth-child(2) > div > div > div').querySelector('span').innerText
+              period = elm.querySelector('div > div:nth-child(2) > div > div > span:nth-child(3) > span').innerText
+          }
+          
+          result.push({
+              company_url,
+              company_name, employment_type, title, period
+          })
+      }
+      return result
+    })
 
     await new Promise(r => setTimeout(r, 500));
     await page.close()

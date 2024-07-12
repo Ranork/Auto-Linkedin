@@ -59,6 +59,7 @@ class LinkedinProfile {
   /** Send connection request to user
    * @param {LinkedIn} linkedinClient - Client that will used in visit
    * @param {string} connectionMessage - Message that will send with connection request
+   * @param {number} waitMs - Wait milliseconds after opening profile (default is coming from linkedin client)
    */
   async connectionRequest(linkedinClient, connectionMessage, waitMs) {
     if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)

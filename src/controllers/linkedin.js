@@ -119,7 +119,6 @@ class LinkedIn {
 
         try {
           const header = await page.evaluate(() => {
-            this.loggerFunction('  ' + document.querySelector('h1'));
             return document.querySelector('h1').textContent;
           });
           const explanation = await page.evaluate(() => {

@@ -4,7 +4,7 @@
 
 Auto LinkedIn is a project that provides automation for LinkedIn using Node.js and Puppeteer. This project helps you save time by automating various tasks on LinkedIn.
 
-Check out the the [wiki](https://github.com/Ranork/Auto-Linkedin/wiki/Installation) for details.
+Check out the the [wiki](https://github.com/Ranork/Auto-Linkedin/wiki) for details.
 
 ## Important Note
 Use at your own discretion. Do not spam people with this. We discourage any stalkerware, bulk or automated messaging usage.
@@ -47,9 +47,11 @@ npm install auto-linkedin
 | Class           | Method             | Explanation                      | Publish Version |
 |-----------------|--------------------|----------------------------------|-----------------|
 | Linkedin        | login              | Authentication for linkedin      | 1.0.0           |
+| Linkedin        | close              | Close the client and browser     | 1.3.1           |
 | Linkedin        | searchPeople       | Find people from search          | 1.0.0           |
 | Linkedin        | getLastConnections | Find latest connected people     | 1.1.3           |
 | Linkedin        | getMyCompany       | Get owned company                | 1.1.3           |
+| Linkedin        | getBrowser         | Get client's puppeteer browser   | 1.3.1           |
 | LinkedinProfile | getProfile         | Get profile from url or id       | 1.2.0           |
 | LinkedinProfile | sendMessage        | Send message to a profile        | 1.3.0           |
 | LinkedinProfile | getMessageHistory  | Get history of messages          | 1.3.0           |

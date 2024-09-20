@@ -21,8 +21,10 @@ class LinkedIn {
    * @param {number} linkedinSettings.COOLDOWN_MIN - Minimum cooldown treshold (default: 5)
    * @param {number} linkedinSettings.COOLDOWN_MAX - Maximum cooldown treshold (default: 20)
    * @param {number} linkedinSettings.TIMEOUT - Timeout in seconds (default: 60)
+   * 
+   * @param {Function} loggerFunction - function to output logs (default: console.log)
    */
-  constructor(browserSettings, linkedinSettings) {
+  constructor(browserSettings, linkedinSettings, loggerFunction) {
     this.browserSettings = browserSettings
     this.linkedinSettings = linkedinSettings || {}
 
@@ -41,6 +43,9 @@ class LinkedIn {
 
     // make dir if not exists
     if (!fs.existsSync(this.linkedinSettings.CACHE_DIR)) fs.mkdirSync(this.linkedinSettings.CACHE_DIR, { recursive: true });
+
+    if (loggerFunction) this.loggerFunction = loggerFunction
+    else this.loggerFunction = console.log
   }
 
   /** Get client's browser
@@ -50,7 +55,7 @@ class LinkedIn {
     if (this.browser) { return this.browser }
 
     this.browser = await puppeteer.launch(this.browserSettings)
-    console.log('  New Browser created.')
+    this.loggerFunction('  New Browser created.')
     return this.browser
   }
 
@@ -60,7 +65,7 @@ class LinkedIn {
    * @returns {Promise<void>} Returns when the login process is completed
    */
   async login(username, password) {
-    console.log('[TASK] Login');
+    this.loggerFunction('[TASK] Login');
 
     const browser = await this.getBrowser()
     const page = await browser.newPage()
@@ -74,10 +79,10 @@ class LinkedIn {
 
       if (page.url().endsWith('feed/')) {
         await page.close()
-        return console.log('  Logged in from cache.')
+        return this.loggerFunction('  Logged in from cache.')
       }
       else {
-        console.log('  Login from cache failed. Trying to login again.');
+        this.loggerFunction('  Login from cache failed. Trying to login again.');
         const client = await page.createCDPSession()		
         await client.send('Network.clearBrowserCookies')
         await new Promise(r => setTimeout(r, 1000));
@@ -97,14 +102,14 @@ class LinkedIn {
     await page.waitForNavigation()
     let afterLoginUrl = page.url()
 
-    console.log('  Url: ' + afterLoginUrl);
+    this.loggerFunction('  Url: ' + afterLoginUrl);
   
     //* Checkpoint for login
     if (afterLoginUrl.includes('checkpoint/challenge')) {
   
       for (let i = 0; i < this.linkedinSettings.TIMEOUT; i++) {
         if (page.url() !== afterLoginUrl) {
-          console.log('  New URL: ' + page.url());
+          this.loggerFunction('  New URL: ' + page.url());
   
           if (page.url().includes('feed')) {
             await page.waitForNavigation()
@@ -114,16 +119,16 @@ class LinkedIn {
 
         try {
           const header = await page.evaluate(() => {
-            console.log('  ' + document.querySelector('h1'));
+            this.loggerFunction('  ' + document.querySelector('h1'));
             return document.querySelector('h1').textContent;
           });
           const explanation = await page.evaluate(() => {
             return document.querySelector('h1').parentElement.querySelector('p').textContent;
           });
       
-          console.log('  ' + header + ' -> ' + explanation);
+          this.loggerFunction('  ' + header + ' -> ' + explanation);
         }
-        catch (e) { console.log(e.message) }
+        catch (e) { this.loggerFunction(e.message) }
   
         await new Promise(r => setTimeout(r, 1000));
       }
@@ -131,17 +136,25 @@ class LinkedIn {
   
     
     if (page.url().includes('feed')) {
-      console.log('  Login complated.');
+      this.loggerFunction('  Login complated.');
 
       const cookies = await page.cookies()
       fs.writeFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json', JSON.stringify(cookies))
       await page.close()
-      return console.log('  Login cached.');
+      return this.loggerFunction('  Login cached.');
     }
     else {
-      await new Promise(r => setTimeout(r, 30000));
+      await new Promise(r => setTimeout(r, 3000));
       throw new Error('Login Failed.')
     }
+  }
+
+  /** Closes the client
+   * @returns {void}
+   */
+  async close() {
+    let browser = await this.getBrowser()
+    browser.close()
   }
 
   /** Search people with filters
@@ -153,7 +166,7 @@ class LinkedIn {
    * @returns {Promise<Array<LinkedinProfile>>} Array of profile objects
    */
   async searchPeople(parameters, limit = 100) {
-    console.log('[TASK] Search People: ' + limit + ' (' + JSON.stringify(parameters) + ')');
+    this.loggerFunction('[TASK] Search People: ' + limit + ' (' + JSON.stringify(parameters) + ')');
     const browser = await this.getBrowser()
     const page = await browser.newPage()
 
@@ -172,14 +185,14 @@ class LinkedIn {
       try { 
         let profiles = await this.extractLinkedinProfilesFromSearch(page) 
         findedLinkedinProfiles.push(...profiles)
-        console.log('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
+        this.loggerFunction('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
       }
-      catch (e) { console.log(e); }
+      catch (e) { this.loggerFunction(e); }
 
       i++
     }
 
-    console.log('  Search complete: ' + findedLinkedinProfiles.length);
+    this.loggerFunction('  Search complete: ' + findedLinkedinProfiles.length);
 
     await page.close()
     return findedLinkedinProfiles.map(p => (new LinkedinProfile(p)))
@@ -220,7 +233,7 @@ class LinkedIn {
    * @returns {Promise<Array<LinkedinProfile>>} Array of profile objects
    */
   async getLastConnections(limit = 80) {
-    console.log('[TASK] Get Last Connections: ' + limit);
+    this.loggerFunction('[TASK] Get Last Connections: ' + limit);
 
     const browser = await this.getBrowser()
     const page = await browser.newPage()
@@ -235,7 +248,7 @@ class LinkedIn {
         }
       }, this.linkedinSettings)
 
-      console.log('  Scroll ' + p);
+      this.loggerFunction('  Scroll ' + p);
       await new Promise(r => setTimeout(r, randomNumber(3,5) * 1000))
     }
 
@@ -266,7 +279,7 @@ class LinkedIn {
    * @returns {Promise<LinkedinCompany>} Owned linkedin company
    */
   async getMyCompany() {
-    console.log('[TASK] Get My Company');
+    this.loggerFunction('[TASK] Get My Company');
 
     const browser = await this.getBrowser()
     const page = await browser.newPage()

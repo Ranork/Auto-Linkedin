@@ -6,6 +6,8 @@ Auto LinkedIn is a project that provides automation for LinkedIn using Node.js a
 
 Check out the the [wiki](https://github.com/Ranork/Auto-Linkedin/wiki) for details.
 
+Check out the [desktop app](https://github.com/Ranork/Auto-Linkedin-App)
+
 ## Important Note
 Use at your own discretion. Do not spam people with this. We discourage any stalkerware, bulk or automated messaging usage.
 

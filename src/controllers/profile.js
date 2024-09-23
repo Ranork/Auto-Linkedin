@@ -282,7 +282,8 @@ class LinkedinProfile {
         name: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div > div > span')?.textContent ?? '').trim(),
         title: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2)')?.textContent ?? '').trim(),
         location: (document.querySelector('.artdeco-card > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > span')?.textContent ?? '').trim(),
-        buttonText: btnparentDiv.querySelector('button').textContent.trim()
+        buttonText: btnparentDiv.querySelector('button').textContent.trim(),
+        picture: document.querySelector('.artdeco-card > div:nth-child(2)')?.querySelector('img')?.src ?? undefined,
       }
     })
 

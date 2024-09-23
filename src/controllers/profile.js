@@ -26,7 +26,7 @@ class LinkedinProfile {
   async visitProfile(linkedinClient, waitMs, scrollPage = true) {
     if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
 
-    console.log('[TASK] LinkedinProfile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ', scrollPage: ' + scrollPage + ')');
+    linkedinClient.loggerFunction('[TASK] LinkedinProfile Visit: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ', scrollPage: ' + scrollPage + ')');
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
     await page.goto(linkedinClient.linkedinSettings.MAIN_ADDRESS + 'in/' + this.details.id)
@@ -63,7 +63,7 @@ class LinkedinProfile {
    */
   async connectionRequest(linkedinClient, connectionMessage, waitMs) {
     if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
-    console.log('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
+    linkedinClient.loggerFunction('[TASK] Conection request: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
     
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
@@ -111,7 +111,7 @@ class LinkedinProfile {
   
       await new Promise(r => setTimeout(r, waitMs));
       await page.close()
-      return console.log('  Connection request sent.')
+      return linkedinClient.loggerFunction('  Connection request sent.')
     }
 
     const firstButtonisFollow = (buttonText === linkedinClient.linkedinSettings.PROFILEBUTTON_FOLLOW)
@@ -143,7 +143,7 @@ class LinkedinProfile {
       
       await new Promise(r => setTimeout(r, waitMs));
       await page.close()
-      return console.log('  Connection request sent.')
+      return linkedinClient.loggerFunction('  Connection request sent.')
     }
 
   }
@@ -155,7 +155,7 @@ class LinkedinProfile {
    */
   async sendMessage(linkedinClient, message, waitMs) {
     if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
-    console.log('[TASK] Send message: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
+    linkedinClient.loggerFunction('[TASK] Send message: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
 
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()
@@ -199,7 +199,7 @@ class LinkedinProfile {
    */
   async getMessageHistory(linkedinClient, waitMs) {
     if (!waitMs) waitMs = randomNumber(linkedinClient.linkedinSettings.COOLDOWN_MIN * 1000, linkedinClient.linkedinSettings.COOLDOWN_MAX * 1000)
-      console.log('[TASK] Message History: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
+      linkedinClient.loggerFunction('[TASK] Message History: ' + this.details.name + ' (waitMs: ' + waitMs.toFixed(0) + ')');
   
       const browser = await linkedinClient.getBrowser()
       const page = await browser.newPage()
@@ -264,7 +264,7 @@ class LinkedinProfile {
    */
   static async getProfile(linkedinClient, url) {
     if (url.includes('/in/')) url = url.split('/in/')[1].replaceAll('/', '')
-    console.log('[TASK] Get profile: ' + url);
+      linkedinClient.loggerFunction('[TASK] Get profile: ' + url);
 
     const browser = await linkedinClient.getBrowser()
     const page = await browser.newPage()

@@ -52,6 +52,7 @@ npm install auto-linkedin
 | Linkedin        | close              | Close the client and browser     | 1.3.1           |
 | Linkedin        | searchPeople       | Find people from search          | 1.0.0           |
 | Linkedin        | getLastConnections | Find latest connected people     | 1.1.3           |
+| Linkedin        | getMyProfile       | Get self profile details         | 1.3.4           |
 | Linkedin        | getMyCompany       | Get owned company                | 1.1.3           |
 | Linkedin        | getBrowser         | Get client's puppeteer browser   | 1.3.1           |
 | LinkedinProfile | getProfile         | Get profile from url or id       | 1.2.0           |
@@ -66,6 +67,8 @@ npm install auto-linkedin
 
 1. Create a linkedin client and login:
 ```js
+const { LinkedIn } = require('auto-linkedin')
+
 const client = new LinkedIn()
 await client.login(process.env.USERNAME, process.env.PASSWORD)
 
@@ -75,6 +78,21 @@ await client.login(process.env.USERNAME, process.env.PASSWORD)
 //   Login completed.
 ```
 Follow the console even though there is an extra instruction.
+
+
+Usage with ES6
+```js
+import { LinkedIn } from 'auto-linkedin'
+
+const client = new LinkedIn()
+await client.login(process.env.USERNAME, process.env.PASSWORD)
+
+//-- Console
+// [TASK] Login
+//   New Browser created.
+//   Login completed.
+```
+
 
 2. Search for users with keyword and 2. network distance (200 limit):
 ```js

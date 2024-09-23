@@ -301,6 +301,23 @@ class LinkedIn {
     return company
   }
 
+  async getMyProfile() {
+    this.loggerFunction('[TASK] Get My Profile');
+
+
+    const browser = await this.getBrowser()
+    const page = await browser.newPage()
+
+    await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed/')
+
+    let profile_link = await page.evaluate(() => (document.querySelector('.feed-identity-module').querySelector('a').href))
+
+    await page.close()
+
+    return await LinkedinProfile.getProfile(this, profile_link)
+
+  }
+
 }
 
 

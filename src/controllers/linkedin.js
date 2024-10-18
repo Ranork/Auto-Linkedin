@@ -64,18 +64,37 @@ class LinkedIn {
    * @param {string} password - The LinkedIn password
    * @returns {Promise<void>} Returns when the login process is completed
    */
-  async login(username, password) {
+  async login(username, password, customCookies) {
     this.loggerFunction('[TASK] Login');
 
     const browser = await this.getBrowser()
     const page = await browser.newPage()
+
+    if (customCookies) {
+      let cookies = JSON.parse(customCookies)
+      await page.setCookie(...cookies)
+      await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed')
+
+      await new Promise(r => setTimeout(r, randomNumber(1, 3) * 1000));
+
+      if (page.url().endsWith('feed/')) {
+        await page.close()
+        return this.loggerFunction('  Logged in from custom cookies.')
+      }
+      else {
+        this.loggerFunction('  Login from custom cookies failed. Trying to login again.');
+        const client = await page.createCDPSession()
+        await client.send('Network.clearBrowserCookies')
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
 
     if (fs.existsSync(this.linkedinSettings.CACHE_DIR + 'cookies.json')) {
       let cookies = JSON.parse(fs.readFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json'))
       await page.setCookie(...cookies)
       await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'feed')
 
-      await new Promise(r => setTimeout(r, randomNumber(1,3) * 1000));
+      await new Promise(r => setTimeout(r, randomNumber(1, 3) * 1000));
 
       if (page.url().endsWith('feed/')) {
         await page.close()
@@ -83,34 +102,34 @@ class LinkedIn {
       }
       else {
         this.loggerFunction('  Login from cache failed. Trying to login again.');
-        const client = await page.createCDPSession()		
+        const client = await page.createCDPSession()
         await client.send('Network.clearBrowserCookies')
         await new Promise(r => setTimeout(r, 1000));
       }
     }
 
     await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'login')
-  
+
     const usernameInput = await page.$('#username')
     await usernameInput.type(username)
-  
+
     const passwordInput = await page.$('#password')
     await passwordInput.type(password)
-  
+
     await passwordInput.press('Enter')
-  
+
     await page.waitForNavigation()
     let afterLoginUrl = page.url()
 
     this.loggerFunction('  Url: ' + afterLoginUrl);
-  
+
     //* Checkpoint for login
     if (afterLoginUrl.includes('checkpoint/challenge')) {
-  
+
       for (let i = 0; i < this.linkedinSettings.TIMEOUT; i++) {
         if (page.url() !== afterLoginUrl) {
           this.loggerFunction('  New URL: ' + page.url());
-  
+
           if (page.url().includes('feed')) {
             await page.waitForNavigation()
             break;
@@ -124,16 +143,16 @@ class LinkedIn {
           const explanation = await page.evaluate(() => {
             return document.querySelector('h1').parentElement.querySelector('p').textContent;
           });
-      
+
           this.loggerFunction('  ' + header + ' -> ' + explanation);
         }
         catch (e) { this.loggerFunction(e.message) }
-  
+
         await new Promise(r => setTimeout(r, 1000));
       }
     }
-  
-    
+
+
     if (page.url().includes('feed')) {
       this.loggerFunction('  Login complated.');
 
@@ -169,8 +188,8 @@ class LinkedIn {
     const browser = await this.getBrowser()
     const page = await browser.newPage()
 
-    if (parameters.network) { parameters.network = JSON.stringify(parameters.network)}
-    if (parameters.geoUrn) { parameters.geoUrn = JSON.stringify(parameters.geoUrn)}
+    if (parameters.network) { parameters.network = JSON.stringify(parameters.network) }
+    if (parameters.geoUrn) { parameters.geoUrn = JSON.stringify(parameters.geoUrn) }
 
     let i = 1
     let findedLinkedinProfiles = []
@@ -178,11 +197,11 @@ class LinkedIn {
 
       parameters.page = p
       const qString = querystring.stringify(parameters)
-      
+
       await page.goto(this.linkedinSettings.MAIN_ADDRESS + 'search/results/people/?' + qString)
 
-      try { 
-        let profiles = await this.extractLinkedinProfilesFromSearch(page) 
+      try {
+        let profiles = await this.extractLinkedinProfilesFromSearch(page)
         findedLinkedinProfiles.push(...profiles)
         this.loggerFunction('  Page: ' + i + '/' + (limit / 10) + ' -> ' + profiles.length);
       }
@@ -207,7 +226,7 @@ class LinkedIn {
 
     return await page.evaluate(() => {
       const cards = document.querySelectorAll('.linked-area')
-      
+
       let people = []
       for (let c of cards) {
         try {
@@ -243,26 +262,26 @@ class LinkedIn {
     for (let p = 0; p <= limit / 40; p++) {
       await page.evaluate((linkedinSettings) => {
         for (let e of document.querySelectorAll('.artdeco-button')) {
-          if(e.textContent.trim() === linkedinSettings.BUTTON_MORERESULTS) e.click()
+          if (e.textContent.trim() === linkedinSettings.BUTTON_MORERESULTS) e.click()
         }
       }, this.linkedinSettings)
 
       this.loggerFunction('  Scroll ' + p);
-      await new Promise(r => setTimeout(r, randomNumber(3,5) * 1000))
+      await new Promise(r => setTimeout(r, randomNumber(3, 5) * 1000))
     }
 
     let people = await page.evaluate(() => {
       let cards = document.querySelectorAll('.mn-connection-card')
       let list = []
       for (let c of cards) {
-          list.push({
-              link: c.querySelector('a').href,
-              id: c.querySelector('a').href.split('/in/')[1].replaceAll('/',''),
-              name: c.querySelector('.mn-connection-card__name').innerText.trim(),
-              title: c.querySelector('.mn-connection-card__occupation').innerText.trim(),
-              location: null,
-              buttonText: c.querySelector('button')?.textContent?.trim() ?? undefined,
-          })
+        list.push({
+          link: c.querySelector('a').href,
+          id: c.querySelector('a').href.split('/in/')[1].replaceAll('/', ''),
+          name: c.querySelector('.mn-connection-card__name').innerText.trim(),
+          title: c.querySelector('.mn-connection-card__occupation').innerText.trim(),
+          location: null,
+          buttonText: c.querySelector('button')?.textContent?.trim() ?? undefined,
+        })
       }
       return list
     })

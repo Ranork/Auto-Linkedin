@@ -154,7 +154,7 @@ class LinkedIn {
 
 
     if (page.url().includes('feed')) {
-      this.loggerFunction('  Login complated.');
+      this.loggerFunction('  Login completed.');
 
       const cookies = await page.cookies()
       fs.writeFileSync(this.linkedinSettings.CACHE_DIR + 'cookies.json', JSON.stringify(cookies))

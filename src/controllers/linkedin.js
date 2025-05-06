@@ -222,22 +222,26 @@ class LinkedIn {
    * @returns {Promise<Array>} Array of profile objects
    */
   async extractLinkedinProfilesFromSearch(page) {
-    await page.waitForSelector('.linked-area')
+    await page.waitForSelector('.linked-area');
 
     return await page.evaluate(() => {
-      const cards = document.querySelectorAll('.linked-area')
-
+      const cards = document.querySelectorAll('.linked-area');
       let people = []
       for (let c of cards) {
         try {
-          const cLink = c.querySelector('a').href.split('?')[0]
+          const profileLink = c.querySelector('a[data-test-app-aware-link]').href.split('?')[0];
+          const nameElement = c.querySelector('.t-16 a[data-test-app-aware-link] span[dir="ltr"] span');
+          const titleElement = c.querySelector('.t-14.t-black.t-normal');
+          const locationElement = c.querySelector('.t-14.t-normal');
+          const buttonElement = c.querySelector('button.artdeco-button');
+
           people.push({
-            id: cLink.split('/in/')[1],
-            link: cLink,
-            name: c.querySelector('.entity-result__title-text > a > span > span:first-child').textContent,
-            title: c.querySelector('.entity-result__primary-subtitle').textContent.trim(),
-            location: c.querySelector('.entity-result__secondary-subtitle').textContent.trim(),
-            buttonText: c.querySelector('button')?.textContent?.trim() ?? undefined,
+            id: profileLink.split('/in/')[1],
+            link: profileLink,
+            name: nameElement ? nameElement.textContent.trim() : '',
+            title: titleElement ? titleElement.textContent.trim() : '',
+            location: locationElement ? locationElement.textContent.trim() : '',
+            buttonText: buttonElement ? buttonElement.textContent.trim() : undefined,
           })
         }
         catch (e) { console.error(e); }
